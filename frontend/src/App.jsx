@@ -90,9 +90,30 @@ function App() {
         <input type="file" onChange={handleFileChange} />
 
         {selectedFile && (
-          <p style={{ marginTop: "10px" }}>
-            Selected: {selectedFile.name}
-          </p>
+          <div
+            style={{
+              marginTop: "15px",
+              padding: "15px",
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              width: "300px",
+            }}
+          >
+            <h3>Selected File</h3>
+
+            <p>
+              <strong>Name:</strong> {selectedFile.name}
+            </p>
+
+            <p>
+              <strong>Size:</strong>{" "}
+              {(selectedFile.size / 1024).toFixed(2)} KB
+            </p>
+
+            <p>
+              <strong>Type:</strong> {selectedFile.type}
+            </p>
+          </div>
         )}
       </div>
 
