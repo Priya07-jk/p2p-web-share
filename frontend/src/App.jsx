@@ -3,6 +3,7 @@ import { useState } from "react";
 function App() {
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("Not Connected");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const joinRoom = () => {
     console.log("Joining room:", roomId);
@@ -12,6 +13,10 @@ function App() {
   const createOffer = () => {
     console.log("Creating offer...");
     setStatus("Offer Created");
+  };
+
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
   };
 
   return (
@@ -61,16 +66,31 @@ function App() {
 
       <div
         style={{
-          marginTop: "20px",
-          padding: "15px",
+          marginTop: "25px",
+          padding: "20px",
+          width: "260px",
           border: "1px solid #ccc",
-          borderRadius: "8px",
-          width: "250px",
+          borderRadius: "10px",
           textAlign: "center",
         }}
       >
-        <h3>Room Status</h3>
+        <h2>Room Status</h2>
         <p>{status}</p>
+      </div>
+
+      <div
+        style={{
+          marginTop: "20px",
+          textAlign: "center",
+        }}
+      >
+        <input type="file" onChange={handleFileChange} />
+
+        {selectedFile && (
+          <p style={{ marginTop: "10px" }}>
+            Selected: {selectedFile.name}
+          </p>
+        )}
       </div>
     </div>
   );
