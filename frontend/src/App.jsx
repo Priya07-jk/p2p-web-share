@@ -168,6 +168,16 @@ function App() {
         }}
       >
         <h3>Activity Log</h3>
+        <button
+  onClick={() => setLogs([])}
+  style={{
+    padding: "6px 12px",
+    marginBottom: "10px",
+    cursor: "pointer",
+  }}
+>
+  Clear Log
+</button>
 
         {logs.length === 0 ? (
           <p>No activity yet</p>
