@@ -2,13 +2,16 @@ import { useState } from "react";
 
 function App() {
   const [roomId, setRoomId] = useState("");
+  const [status, setStatus] = useState("Not Connected");
 
   const joinRoom = () => {
     console.log("Joining room:", roomId);
+    setStatus("Connected");
   };
 
   const createOffer = () => {
     console.log("Creating offer...");
+    setStatus("Offer Created");
   };
 
   return (
@@ -54,6 +57,20 @@ function App() {
         >
           Create Offer
         </button>
+      </div>
+
+      <div
+        style={{
+          marginTop: "20px",
+          padding: "15px",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          width: "250px",
+          textAlign: "center",
+        }}
+      >
+        <h3>Room Status</h3>
+        <p>{status}</p>
       </div>
     </div>
   );
