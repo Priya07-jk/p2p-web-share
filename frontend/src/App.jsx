@@ -4,6 +4,7 @@ function App() {
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("Not Connected");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [progress, setProgress] = useState(0);
 
   const joinRoom = () => {
     console.log("Joining room:", roomId);
@@ -13,10 +14,12 @@ function App() {
   const createOffer = () => {
     console.log("Creating offer...");
     setStatus("Offer Created");
+    setProgress(65);
   };
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
+    setProgress(25);
   };
 
   return (
@@ -91,6 +94,36 @@ function App() {
             Selected: {selectedFile.name}
           </p>
         )}
+      </div>
+
+      <div
+        style={{
+          marginTop: "20px",
+          width: "300px",
+          textAlign: "center",
+        }}
+      >
+        <h3>Transfer Progress</h3>
+
+        <div
+          style={{
+            width: "100%",
+            height: "20px",
+            backgroundColor: "#ddd",
+            borderRadius: "10px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${progress}%`,
+              height: "100%",
+              backgroundColor: "#4CAF50",
+            }}
+          />
+        </div>
+
+        <p>{progress}% Completed</p>
       </div>
     </div>
   );
