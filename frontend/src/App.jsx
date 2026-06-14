@@ -5,21 +5,32 @@ function App() {
   const [status, setStatus] = useState("Not Connected");
   const [selectedFile, setSelectedFile] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [logs, setLogs] = useState([]);
 
   const joinRoom = () => {
     console.log("Joining room:", roomId);
     setStatus("Connected");
+
+    setLogs((prev) => [...prev, `Joined room ${roomId}`]);
   };
 
   const createOffer = () => {
     console.log("Creating offer...");
     setStatus("Offer Created");
     setProgress(65);
+
+    setLogs((prev) => [...prev, "Created WebRTC offer"]);
   };
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    const file = e.target.files[0];
+
+    setSelectedFile(file);
     setProgress(25);
+
+    if (file) {
+      setLogs((prev) => [...prev, `Selected file: ${file.name}`]);
+    }
   };
 
   return (
@@ -145,6 +156,28 @@ function App() {
         </div>
 
         <p>{progress}% Completed</p>
+      </div>
+
+      <div
+        style={{
+          marginTop: "20px",
+          width: "300px",
+          padding: "15px",
+          border: "1px solid #ccc",
+          borderRadius: "10px",
+        }}
+      >
+        <h3>Activity Log</h3>
+
+        {logs.length === 0 ? (
+          <p>No activity yet</p>
+        ) : (
+          <ul>
+            {logs.map((log, index) => (
+              <li key={index}>{log}</li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
