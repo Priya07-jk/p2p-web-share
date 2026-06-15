@@ -17,10 +17,68 @@ const dataChannel = useRef(null);
     setLogs((prev) => [...prev, message]);
   });
 
+  socket.on("offer", async (offer) => {
+    setLogs((prev) => [
+      ...prev,
+      "Offer received",
+    ]);
+
+    initializePeer();
+
+    await peerConnection.current.setRemoteDescription(
+      new RTCSessionDescription(offer)
+    );
+
+    const answer =
+      await peerConnection.current.createAnswer();
+
+    await peerConnection.current.setLocalDescription(
+      answer
+    );
+
+    socket.emit("answer", {
+      roomId,
+      answer,
+    });
+
+    setLogs((prev) => [
+      ...prev,
+      "Answer sent",
+    ]);
+  });
+
+  socket.on("answer", async (answer) => {
+    await peerConnection.current.setRemoteDescription(
+      new RTCSessionDescription(answer)
+    );
+
+    setLogs((prev) => [
+      ...prev,
+      "Answer received",
+    ]);
+  });
+  socket.on("ice-candidate", async (candidate) => {
+  try {
+    await peerConnection.current.addIceCandidate(
+      new RTCIceCandidate(candidate)
+    );
+
+    setLogs((prev) => [
+      ...prev,
+      "ICE candidate received",
+    ]);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
   return () => {
-    socket.off("user-joined");
-  };
-}, []);
+  socket.off("user-joined");
+  socket.off("offer");
+  socket.off("answer");
+  socket.off("ice-candidate");
+};
+}, [roomId]);
 const initializePeer = () => {
   peerConnection.current = new RTCPeerConnection({
     iceServers: [
@@ -29,24 +87,77 @@ const initializePeer = () => {
       },
     ],
   });
-  dataChannel.current =
-  peerConnection.current.createDataChannel(
-    "fileTransfer"
+  peerConnection.current.onicecandidate = (event) => {
+    console.log("ICE:", event.candidate);
+  if (event.candidate) {
+    socket.emit("ice-candidate", {
+      roomId,
+      candidate: event.candidate,
+    });
+
+    setLogs((prev) => [
+      ...prev,
+      "ICE candidate sent",
+    ]);
+  }
+};
+
+peerConnection.current.onconnectionstatechange = () => {
+  console.log(
+    "STATE:",
+    peerConnection.current.connectionState
   );
 
-dataChannel.current.onopen = () => {
   setLogs((prev) => [
     ...prev,
-    "Data channel opened",
+    `State: ${peerConnection.current.connectionState}`,
   ]);
+
+  if (
+    peerConnection.current.connectionState ===
+    "connected"
+  ) {
+    setStatus("Peer Connected");
+
+    setLogs((prev) => [
+      ...prev,
+      "Peer Connected",
+    ]);
+  }
 };
 
-dataChannel.current.onclose = () => {
-  setLogs((prev) => [
-    ...prev,
-    "Data channel closed",
-  ]);
+ peerConnection.current.ondatachannel = (event) => {
+  dataChannel.current = event.channel;
+
+  dataChannel.current.onopen = () => {
+    setLogs((prev) => [
+      ...prev,
+      "Data channel opened",
+    ]);
+
+    setStatus("Peer Connected");
+    dataChannel.current.send("Hello Peer");
+
+  };
+
+  dataChannel.current.onmessage = (event) => {
+    console.log("MESSAGE:", event.data);
+   
+
+    setLogs((prev) => [
+      ...prev,
+      `Message: ${event.data}`,
+    ]);
+  };
+
+  dataChannel.current.onclose = () => {
+    setLogs((prev) => [
+      ...prev,
+      "Data channel closed",
+    ]);
+  };
 };
+
 
   setLogs((prev) => [
     ...prev,
@@ -70,31 +181,71 @@ dataChannel.current.onclose = () => {
     ]);
   };
 
- const createOffer = () => {
+const createOffer = async () => {
+  if (!roomId.trim()) {
+    alert("Join a room first");
+    return;
+  }
+
   initializePeer();
 
-  setStatus("Peer Connection Created");
+  dataChannel.current =
+    peerConnection.current.createDataChannel(
+      "fileTransfer"
+    );
 
+  dataChannel.current.onopen = () => {
   setLogs((prev) => [
     ...prev,
-    "Peer connection ready",
+    "Data channel opened",
   ]);
+
+  setStatus("Peer Connected");
+
+  dataChannel.current.send("Hello Peer");
 };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    setSelectedFile(file);
-    setProgress(25);
-
+  dataChannel.current.onclose = () => {
+     
     setLogs((prev) => [
       ...prev,
-      `Selected file: ${file.name}`,
+      "Data channel closed",
     ]);
   };
 
+  const offer =
+    await peerConnection.current.createOffer();
+
+  await peerConnection.current.setLocalDescription(
+    offer
+  );
+
+  socket.emit("offer", {
+    roomId,
+    offer,
+  });
+
+  setStatus("Offer Created");
+
+  setLogs((prev) => [
+    ...prev,
+    "Offer created",
+    "Offer sent to room",
+  ]);
+};
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  setSelectedFile(file);
+  setProgress(25);
+
+  setLogs((prev) => [
+    ...prev,
+    `Selected file: ${file.name}`,
+  ]);
+};
   return (
     <div
       style={{
