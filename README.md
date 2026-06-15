@@ -73,14 +73,13 @@ p2p-web-share/
 │
 └── README.md
 ```
-## Future Improvements
+## Current Limitations
 
-* Drag and drop file upload
-* Multiple file transfer support
-* Large file chunking
-* Transfer speed display
-* File preview support
-* Secure encrypted file sharing
+- Supports 1-to-1 transfer
+- Basic file transfer implementation
+- SHA-256 verification not yet implemented
+- Drag-and-drop upload not yet implemented
+- Large file optimization not yet implemented
 
 
 
