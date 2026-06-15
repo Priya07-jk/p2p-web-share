@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import socket from "./socket";
 
 function App() {
   const [roomId, setRoomId] = useState("");
@@ -7,30 +8,56 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
 
-  const joinRoom = () => {
-    console.log("Joining room:", roomId);
-    setStatus("Connected");
+  useEffect(() => {
+  socket.on("user-joined", (message) => {
+    console.log("RECEIVED:", message);
 
-    setLogs((prev) => [...prev, `Joined room ${roomId}`]);
+    setLogs((prev) => [...prev, message]);
+  });
+
+  return () => {
+    socket.off("user-joined");
+  };
+}, []);
+  const joinRoom = () => {
+    if (!roomId.trim()) {
+      alert("Enter a Room ID");
+      return;
+    }
+
+    socket.emit("join-room", roomId);
+
+    setStatus(`Connected to Room ${roomId}`);
+
+    setLogs((prev) => [
+      ...prev,
+      `Joined room ${roomId}`,
+      "Room join request sent to server",
+    ]);
   };
 
   const createOffer = () => {
-    console.log("Creating offer...");
     setStatus("Offer Created");
     setProgress(65);
 
-    setLogs((prev) => [...prev, "Created WebRTC offer"]);
+    setLogs((prev) => [
+      ...prev,
+      "Created WebRTC offer",
+    ]);
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
 
+    if (!file) return;
+
     setSelectedFile(file);
     setProgress(25);
 
-    if (file) {
-      setLogs((prev) => [...prev, `Selected file: ${file.name}`]);
-    }
+    setLogs((prev) => [
+      ...prev,
+      `Selected file: ${file.name}`,
+    ]);
   };
 
   return (
@@ -82,7 +109,7 @@ function App() {
         style={{
           marginTop: "25px",
           padding: "20px",
-          width: "260px",
+          width: "280px",
           border: "1px solid #ccc",
           borderRadius: "10px",
           textAlign: "center",
@@ -107,7 +134,7 @@ function App() {
               padding: "15px",
               border: "1px solid #ccc",
               borderRadius: "10px",
-              width: "300px",
+              width: "320px",
             }}
           >
             <h3>Selected File</h3>
@@ -122,7 +149,7 @@ function App() {
             </p>
 
             <p>
-              <strong>Type:</strong> {selectedFile.type}
+              <strong>Type:</strong> {selectedFile.type || "Unknown"}
             </p>
           </div>
         )}
@@ -131,7 +158,7 @@ function App() {
       <div
         style={{
           marginTop: "20px",
-          width: "300px",
+          width: "320px",
           textAlign: "center",
         }}
       >
@@ -151,6 +178,7 @@ function App() {
               width: `${progress}%`,
               height: "100%",
               backgroundColor: "#4CAF50",
+              transition: "0.3s",
             }}
           />
         </div>
@@ -161,23 +189,24 @@ function App() {
       <div
         style={{
           marginTop: "20px",
-          width: "300px",
+          width: "320px",
           padding: "15px",
           border: "1px solid #ccc",
           borderRadius: "10px",
         }}
       >
         <h3>Activity Log</h3>
+
         <button
-  onClick={() => setLogs([])}
-  style={{
-    padding: "6px 12px",
-    marginBottom: "10px",
-    cursor: "pointer",
-  }}
->
-  Clear Log
-</button>
+          onClick={() => setLogs([])}
+          style={{
+            padding: "6px 12px",
+            marginBottom: "10px",
+            cursor: "pointer",
+          }}
+        >
+          Clear Log
+        </button>
 
         {logs.length === 0 ? (
           <p>No activity yet</p>
