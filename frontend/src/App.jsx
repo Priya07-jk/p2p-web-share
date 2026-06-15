@@ -29,6 +29,24 @@ const initializePeer = () => {
       },
     ],
   });
+  dataChannel.current =
+  peerConnection.current.createDataChannel(
+    "fileTransfer"
+  );
+
+dataChannel.current.onopen = () => {
+  setLogs((prev) => [
+    ...prev,
+    "Data channel opened",
+  ]);
+};
+
+dataChannel.current.onclose = () => {
+  setLogs((prev) => [
+    ...prev,
+    "Data channel closed",
+  ]);
+};
 
   setLogs((prev) => [
     ...prev,
