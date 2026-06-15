@@ -7,6 +7,8 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
+  const [receivedFileName, setReceivedFileName] =
+  useState("received-file");
   const peerConnection = useRef(null);
 const dataChannel = useRef(null);
 
@@ -142,6 +144,34 @@ peerConnection.current.onconnectionstatechange = () => {
 
   dataChannel.current.onmessage = (event) => {
 
+  if (typeof event.data === "string") {
+
+    try {
+      const message = JSON.parse(event.data);
+
+      if (message.type === "file-info") {
+
+        setReceivedFileName(message.fileName);
+
+        setLogs((prev) => [
+          ...prev,
+          `Incoming file: ${message.fileName}`,
+        ]);
+
+        return;
+      }
+
+    } catch {
+
+      setLogs((prev) => [
+        ...prev,
+        `Message: ${event.data}`,
+      ]);
+
+      return;
+    }
+  }
+
   const blob = new Blob([event.data]);
 
   const url = URL.createObjectURL(blob);
@@ -149,16 +179,17 @@ peerConnection.current.onconnectionstatechange = () => {
   const a = document.createElement("a");
 
   a.href = url;
-  a.download = "received-file";
+  a.download = receivedFileName;
 
+  document.body.appendChild(a);
   a.click();
+  a.remove();
 
   setLogs((prev) => [
     ...prev,
     "File received",
   ]);
 };
-
   dataChannel.current.onclose = () => {
     setLogs((prev) => [
       ...prev,
@@ -281,6 +312,12 @@ const sendFile = () => {
 
     setProgress(100);
   };
+  dataChannel.current.send(
+  JSON.stringify({
+    type: "file-info",
+    fileName: selectedFile.name,
+  })
+);
 
   reader.readAsArrayBuffer(selectedFile);
 };
