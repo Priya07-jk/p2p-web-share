@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import socket from "./socket";
 
 function App() {
@@ -7,6 +7,8 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
+  const peerConnection = useRef(null);
+const dataChannel = useRef(null);
 
   useEffect(() => {
   socket.on("user-joined", (message) => {
@@ -19,6 +21,20 @@ function App() {
     socket.off("user-joined");
   };
 }, []);
+const initializePeer = () => {
+  peerConnection.current = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: "stun:stun.l.google.com:19302",
+      },
+    ],
+  });
+
+  setLogs((prev) => [
+    ...prev,
+    "RTCPeerConnection initialized",
+  ]);
+};
   const joinRoom = () => {
     if (!roomId.trim()) {
       alert("Enter a Room ID");
@@ -36,15 +52,16 @@ function App() {
     ]);
   };
 
-  const createOffer = () => {
-    setStatus("Offer Created");
-    setProgress(65);
+ const createOffer = () => {
+  initializePeer();
 
-    setLogs((prev) => [
-      ...prev,
-      "Created WebRTC offer",
-    ]);
-  };
+  setStatus("Peer Connection Created");
+
+  setLogs((prev) => [
+    ...prev,
+    "Peer connection ready",
+  ]);
+};
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
