@@ -141,14 +141,23 @@ peerConnection.current.onconnectionstatechange = () => {
   };
 
   dataChannel.current.onmessage = (event) => {
-    console.log("MESSAGE:", event.data);
-   
 
-    setLogs((prev) => [
-      ...prev,
-      `Message: ${event.data}`,
-    ]);
-  };
+  const blob = new Blob([event.data]);
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "received-file";
+
+  a.click();
+
+  setLogs((prev) => [
+    ...prev,
+    "File received",
+  ]);
+};
 
   dataChannel.current.onclose = () => {
     setLogs((prev) => [
@@ -246,6 +255,35 @@ const handleFileChange = (e) => {
     `Selected file: ${file.name}`,
   ]);
 };
+const sendFile = () => {
+  if (!selectedFile) {
+    alert("Select a file first");
+    return;
+  }
+
+  if (
+    !dataChannel.current ||
+    dataChannel.current.readyState !== "open"
+  ) {
+    alert("Peer not connected");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    dataChannel.current.send(e.target.result);
+
+    setLogs((prev) => [
+      ...prev,
+      "File sent",
+    ]);
+
+    setProgress(100);
+  };
+
+  reader.readAsArrayBuffer(selectedFile);
+};
   return (
     <div
       style={{
@@ -312,10 +350,16 @@ const handleFileChange = (e) => {
         }}
       >
         <input type="file" onChange={handleFileChange} />
+        <br />
+<br />
+
+<button onClick={sendFile}>
+  Send File
+</button>
 
         {selectedFile && (
           <div
-            style={{
+            style={{  
               marginTop: "15px",
               padding: "15px",
               border: "1px solid #ccc",
